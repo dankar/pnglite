@@ -28,6 +28,8 @@
 #ifndef _PNGLITE_H_
 #define _PNGLITE_H_
 
+#include <string.h>
+
 #ifdef __cplusplus
 extern "C"{
 #endif
