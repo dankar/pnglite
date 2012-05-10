@@ -487,15 +487,16 @@ static int png_write_idats(png_t* png, unsigned char* data)
 	unsigned long written;
 	unsigned long crc;
 	unsigned size = png->width * png->height * png->bpp + png->height;
+	unsigned chunk_size = compressBound(size);
 	
 	(void)png_init_deflate;
 	(void)png_end_deflate;
 	(void)png_deflate;
 
-	chunk = png_alloc(size);
+	chunk = png_alloc(chunk_size + 4);
 	memcpy(chunk, "IDAT", 4);
 	
-	written = size;
+	written = chunk_size;
 	compress(chunk+4, &written, data, size);
 	
 	crc = crc32(0L, Z_NULL, 0);
