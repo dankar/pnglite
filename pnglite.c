@@ -514,83 +514,49 @@ static int png_write_idats(png_t* png, unsigned char* data)
 	return PNG_NO_ERROR;
 }
 
-static int png_read_idat(png_t* png, unsigned firstlen) 
+static int png_read_idat(png_t* png, unsigned length)
 {
-	unsigned type = 0;
-	char *chunk;
-	int result;
-	unsigned length = firstlen;
-	unsigned old_len = length;
-
 #if DO_CRC_CHECKS
 	unsigned orig_crc;
 	unsigned calc_crc;
 #endif
 
-	chunk = png_alloc(firstlen); 
-
-	result = png_init_inflate(png);
-
-	if(result != PNG_NO_ERROR)
+	if(!png->readbuf || png->readbuflen < length)
 	{
-		png_end_inflate(png);
-		png_free(chunk); 
-		return result;
+		if (png->readbuf)
+		{
+			png_free(png->readbuf);
+		}
+		png->readbuf = png_alloc(length);
+		png->readbuflen = length;
 	}
 
-	do
+	if(!png->readbuf)
 	{
-		if(file_read(png, chunk, 1, length) != length)
-		{
-			png_end_inflate(png);
-			png_free(chunk); 
-			return PNG_FILE_ERROR;
-		}
+		return PNG_MEMORY_ERROR;
+	}
+
+	if(file_read(png, png->readbuf, 1, length) != length)
+	{
+		return PNG_FILE_ERROR;
+	}
 
 #if DO_CRC_CHECKS
-		calc_crc = crc32(0L, Z_NULL, 0);
-		calc_crc = crc32(calc_crc, (unsigned char*)"IDAT", 4);
-		calc_crc = crc32(calc_crc, (unsigned char*)chunk, length);
+	calc_crc = crc32(0L, Z_NULL, 0);
+	calc_crc = crc32(calc_crc, (unsigned char*)"IDAT", 4);
+	calc_crc = crc32(calc_crc, (unsigned char*)png->readbuf, length);
 
-		file_read_ul(png, &orig_crc);
+	file_read_ul(png, &orig_crc);
 
-		if(orig_crc != calc_crc)
-		{
-			result = PNG_CRC_ERROR;
-			break;
-		}
+	if(orig_crc != calc_crc)
+	{
+		return PNG_CRC_ERROR;
+	}
 #else
-		file_read_ul(png);
+	file_read_ul(png);
 #endif
 
-		result = png_inflate(png, chunk, length);
-
-		if(result != PNG_NO_ERROR) break;
-		
-		file_read_ul(png, &length);
-
-		if(length > old_len)
-		{
-			png_free(chunk); 
-			chunk = png_alloc(length); 
-			old_len = length;
-		}
-
-		if(file_read(png, &type, 1, 4) != 4)
-		{
-			result = PNG_FILE_ERROR;
-			break;
-		}
-
-	}while(type == *(unsigned int*)"IDAT");
-
-	if(type == *(unsigned int*)"IEND")
-		result = PNG_DONE;
-
-	png_free(chunk);
-	png_end_inflate(png);
-
-	return result;
+	return png_inflate(png, png->readbuf, length);
 }
 
 static int png_process_chunk(png_t* png)
@@ -606,11 +572,21 @@ static int png_process_chunk(png_t* png)
 
 	if(type == *(unsigned int*)"IDAT")	/* if we found an idat, all other idats should be followed with no other chunks in between */
 	{
-		png->png_datalen = png->width * png->height * png->bpp + png->height;
-		png->png_data = png_alloc(png->png_datalen);
-		
+		if(!png->png_data) /* first IDAT */
+		{
+			png->png_datalen = png->width * png->height * png->bpp + png->height;
+			png->png_data = png_alloc(png->png_datalen);
+		}
+
 		if(!png->png_data)
 			return PNG_MEMORY_ERROR;
+		
+		if(!png->zs)
+		{
+			result = png_init_inflate(png);
+			if(result != PNG_NO_ERROR)
+				return result;
+		}
 
 		return png_read_idat(png, length);
 	}
@@ -620,7 +596,7 @@ static int png_process_chunk(png_t* png)
 	}
 	else
 	{
-		file_read(png, 0, 1, length + 4);		/* unknown chunk */
+		file_read(png, 0, 1, length + 4); /* unknown chunk */
 	}
 
 	return result;
@@ -799,9 +775,23 @@ int png_get_data(png_t* png, unsigned char* data)
 {
 	int result = PNG_NO_ERROR;
 
+	png->zs = NULL;
+	png->png_datalen = 0;
+	png->png_data = NULL;
+
 	while(result == PNG_NO_ERROR)
 	{
 		result = png_process_chunk(png);
+	}
+
+	if (png->readbuf)
+	{
+		png_free(png->readbuf);
+		png->readbuflen = 0;
+	}
+	if (png->zs)
+	{
+		png_end_inflate(png);
 	}
 
 	if(result != PNG_DONE)
