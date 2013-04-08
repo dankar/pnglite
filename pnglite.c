@@ -15,8 +15,6 @@
 #include <string.h>
 #include "pnglite.h"
 
-
-
 static png_alloc_t png_alloc;
 static png_free_t png_free;
 
@@ -84,7 +82,6 @@ static int file_write_ul(png_t* png, unsigned in)
 
 	return PNG_NO_ERROR;
 }
-	
 
 static unsigned get_ul(unsigned char* buf)
 {
@@ -195,7 +192,7 @@ static int png_read_ihdr(png_t* png)
 
 	if(png->interlace_method)
 		return PNG_NOT_SUPPORTED;
-	
+
 	return PNG_NO_ERROR;
 }
 
@@ -204,19 +201,19 @@ static int png_write_ihdr(png_t* png)
 	unsigned char ihdr[13+4];
 	unsigned char *p = ihdr;
 	unsigned crc;
-	
+
 	file_write(png, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A", 1, 8);
 
 	file_write_ul(png, 13);
-    
+
 	*p = 'I';			p++;
 	*p = 'H';			p++;
 	*p = 'D';			p++;
 	*p = 'R';			p++;
-	set_ul(p, png->width);	p+=4;
-	set_ul(p, png->height);	p+=4;
-	*p = png->depth;			p++;
-	*p = png->color_type;	p++;
+	set_ul(p, png->width);		p+=4;
+	set_ul(p, png->height);		p+=4;
+	*p = png->depth;		p++;
+	*p = png->color_type;		p++;
 	*p = 0;				p++;
 	*p = 0;				p++;
 	*p = 0;				p++;
@@ -241,16 +238,16 @@ void png_print_info(png_t* png)
 
 	switch(png->color_type)
 	{
-	case PNG_GREYSCALE:			printf("greyscale\n"); break;
-	case PNG_TRUECOLOR:			printf("truecolor\n"); break;
-	case PNG_INDEXED:			printf("palette\n"); break;
+	case PNG_GREYSCALE:		printf("greyscale\n"); break;
+	case PNG_TRUECOLOR:		printf("truecolor\n"); break;
+	case PNG_INDEXED:		printf("palette\n"); break;
 	case PNG_GREYSCALE_ALPHA:	printf("greyscale with alpha\n"); break;
 	case PNG_TRUECOLOR_ALPHA:	printf("truecolor with alpha\n"); break;
-	default:					printf("unknown, this is not good\n"); break;
+	default:			printf("unknown, this is not good\n"); break;
 	}
 
 	printf("\tcompression:\t%s\n",	png->compression_method?"unknown, this is not good":"inflate/deflate");
-	printf("\tfilter:\t\t%s\n",		png->filter_method?"unknown, this is not good":"adaptive");
+	printf("\tfilter:\t\t%s\n",	png->filter_method?"unknown, this is not good":"adaptive");
 	printf("\tinterlace:\t%s\n",	png->interlace_method?"interlace":"no interlace");
 }
 
@@ -364,8 +361,6 @@ static int png_init_inflate(png_t* png)
 	if(!stream)
 		return PNG_MEMORY_ERROR;
 
-	
-
 #if USE_ZLIB
 	memset(stream, 0, sizeof(z_stream));
 	if(inflateInit(stream) != Z_OK)
@@ -436,7 +431,7 @@ static int png_inflate(png_t* png, char* data, int len)
 
 	stream->next_in = (unsigned char*)data;
 	stream->avail_in = len;
-	
+
 #if USE_ZLIB
 	result = inflate(stream, Z_SYNC_FLUSH);
 #else
@@ -460,7 +455,6 @@ static int png_deflate(png_t* png, char* outdata, int outlen, int *outwritten)
 	int result;
 
 	z_stream *stream = png->zs;
-
 
 	if(!stream)
 		return PNG_MEMORY_ERROR;
@@ -488,17 +482,17 @@ static int png_write_idats(png_t* png, unsigned char* data)
 	unsigned long crc;
 	unsigned size = png->width * png->height * png->bpp + png->height;
 	unsigned chunk_size = compressBound(size);
-	
+
 	(void)png_init_deflate;
 	(void)png_end_deflate;
 	(void)png_deflate;
 
 	chunk = png_alloc(chunk_size + 4);
 	memcpy(chunk, "IDAT", 4);
-	
+
 	written = chunk_size;
 	compress(chunk+4, &written, data, size);
-	
+
 	crc = crc32(0L, Z_NULL, 0);
 	crc = crc32(crc, chunk, written+4);
 	set_ul(chunk+written+4, crc);
@@ -510,7 +504,7 @@ static int png_write_idats(png_t* png, unsigned char* data)
 	file_write(png, "IEND", 1, 4);
 	crc = crc32(0L, (const unsigned char *)"IEND", 4);
 	file_write_ul(png, crc);
-	
+
 	return PNG_NO_ERROR;
 }
 
@@ -580,7 +574,7 @@ static int png_process_chunk(png_t* png)
 
 		if(!png->png_data)
 			return PNG_MEMORY_ERROR;
-		
+
 		if(!png->zs)
 		{
 			result = png_init_inflate(png);
@@ -611,7 +605,7 @@ static void png_filter_sub(int stride, unsigned char* in, unsigned char* out, in
 	{
 		if(i >= stride)
 			a = out[i - stride];
-		
+
 		out[i] = in[i] + a;
 	}
 }
@@ -620,13 +614,13 @@ static void png_filter_up(int stride, unsigned char* in, unsigned char* out, uns
 {
 	int i;
 
-	if(prev_line) 
-    { 
-        for(i = 0; i < len; i++) 
-            out[i] = in[i] + prev_line[i]; 
-    } 
-    else 
-        memcpy(out, in, len);
+	if(prev_line)
+	{
+        for(i = 0; i < len; i++)
+		out[i] = in[i] + prev_line[i];
+	}
+	else
+		memcpy(out, in, len);
 }
 
 static void png_filter_average(int stride, unsigned char* in, unsigned char* out, unsigned char* prev_line, int len)
@@ -691,7 +685,7 @@ static void png_filter_paeth(int stride, unsigned char* in, unsigned char* out, 
 				b = prev_line[i];
 			else
 				b = 0;
-	
+
 			if(i >= stride)
 				a = out[i - stride];
 			else
@@ -706,8 +700,6 @@ static void png_filter_paeth(int stride, unsigned char* in, unsigned char* out, 
 
 static int png_filter(png_t* png, unsigned char* data)
 {
-
-
 	return PNG_NO_ERROR;
 }
 
@@ -796,13 +788,13 @@ int png_get_data(png_t* png, unsigned char* data)
 
 	if(result != PNG_DONE)
 	{
-		png_free(png->png_data); 
+		png_free(png->png_data);
 		return result;
 	}
 
 	result = png_unfilter(png, data);
 
-	png_free(png->png_data); 
+	png_free(png->png_data);
 
 	return result;
 }
@@ -828,11 +820,11 @@ int png_set_data(png_t* png, unsigned width, unsigned height, char depth, int co
 	png_filter(png, filtered);
 	png_write_ihdr(png);
 	png_write_idats(png, filtered);
-	
+
 	png_free(filtered);
+
 	return PNG_NO_ERROR;
 }
-
 
 char* png_error_string(int error)
 {
