@@ -95,6 +95,9 @@ typedef struct
 	unsigned char			filter_method;
 	unsigned char			interlace_method;
 	unsigned char			bpp;
+
+	unsigned char*			readbuf;
+	unsigned				readbuflen;
 }png_t;
 
 /*
