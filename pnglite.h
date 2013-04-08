@@ -12,7 +12,7 @@
 	1. The origin of this software must not be misrepresented; you must not
 	   claim that you wrote the original software. If you use this software
 	   in a product, an acknowledgment in the product documentation would be
-	   appreciated but is not required.  
+	   appreciated but is not required.
 
 	2. Altered source versions must be plainly marked as such, and must not be
 	   misrepresented as being the original software.
@@ -41,7 +41,7 @@ extern "C"{
 
 enum
 {
-	PNG_DONE				= 1,
+	PNG_DONE			= 1,
 	PNG_NO_ERROR			= 0,
 	PNG_FILE_ERROR			= -1,
 	PNG_HEADER_ERROR		= -2,
@@ -63,7 +63,7 @@ enum
 {
 	PNG_GREYSCALE			= 0,
 	PNG_TRUECOLOR			= 2,
-	PNG_INDEXED				= 3,
+	PNG_INDEXED			= 3,
 	PNG_GREYSCALE_ALPHA		= 4,
 	PNG_TRUECOLOR_ALPHA		= 6
 };
@@ -79,16 +79,16 @@ typedef void * (*png_alloc_t)(size_t s);
 
 typedef struct
 {
-	void*					zs;				/* pointer to z_stream */
+	void*				zs;				/* pointer to z_stream */
 	png_read_callback_t		read_fun;
-	png_write_callback_t	write_fun;
-	void*					user_pointer;
+	png_write_callback_t		write_fun;
+	void*				user_pointer;
 
 	unsigned char*			png_data;
-	unsigned				png_datalen;
+	unsigned			png_datalen;
 
-	unsigned				width;
-	unsigned				height;
+	unsigned			width;
+	unsigned			height;
 	unsigned char			depth;
 	unsigned char			color_type;
 	unsigned char			compression_method;
@@ -97,8 +97,8 @@ typedef struct
 	unsigned char			bpp;
 
 	unsigned char*			readbuf;
-	unsigned				readbuflen;
-}png_t;
+	unsigned			readbuflen;
+} png_t;
 
 /*
 	Function: png_init
@@ -150,9 +150,9 @@ int png_open_file_write(png_t *png, const char* filename);
 	The callback will be called like fwrite.
 
 	Reading:
-	The callback will be called each time pnglite needs more data. The callback should read as much data as requested, 
-	or return 0. This should always be possible if the PNG is sane.	If the output-buffer is a null-pointer the callback 
-	should only skip ahead the specified number of elements. If the callback is a null-pointer the user_pointer will be 
+	The callback will be called each time pnglite needs more data. The callback should read as much data as requested,
+	or return 0. This should always be possible if the PNG is sane.	If the output-buffer is a null-pointer the callback
+	should only skip ahead the specified number of elements. If the callback is a null-pointer the user_pointer will be
 	treated as a file pointer (use png_open_file instead).
 
 	Parameters:
@@ -198,7 +198,7 @@ char* png_error_string(int error);
 	Function: png_get_data
 
 	This function decodes the opened png file and stores the result in data. data should be big enough to hold the decoded png. Required size will be:
-	
+
 	> width*height*(bytes per pixel)
 
 	Parameters:
@@ -219,7 +219,7 @@ int png_set_data(png_t* png, unsigned width, unsigned height, char depth, int co
 
 	Parameters:
 		png - png to close.
-	
+
 	Returns:
 		PNG_NO_ERROR
 */
