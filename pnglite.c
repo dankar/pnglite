@@ -770,6 +770,8 @@ int png_get_data(png_t* png, unsigned char* data)
 	png->zs = NULL;
 	png->png_datalen = 0;
 	png->png_data = NULL;
+	png->readbuf = NULL;
+	png->readbuflen = 0;
 
 	while(result == PNG_NO_ERROR)
 	{
