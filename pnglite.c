@@ -417,7 +417,7 @@ static int png_end_inflate(png_t* png)
 	return PNG_NO_ERROR;
 }
 
-static int png_inflate(png_t* png, char* data, int len)
+static int png_inflate(png_t* png, unsigned char* data, int len)
 {
 	int result;
 #if USE_ZLIB
@@ -429,7 +429,7 @@ static int png_inflate(png_t* png, char* data, int len)
 	if(!stream)
 		return PNG_MEMORY_ERROR;
 
-	stream->next_in = (unsigned char*)data;
+	stream->next_in = data;
 	stream->avail_in = len;
 
 #if USE_ZLIB
